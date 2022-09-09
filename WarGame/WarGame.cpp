@@ -7,19 +7,25 @@
 #include <cstdlib>
 #include <time.h>
 #include <vector>
+#include <sstream>
+#include <string>
 using namespace std;
 
 //FUNCTION DECLARATION
-void deckMaker();
-void deckRandomizer();
-void deckDistributor();
+void deckMaker(string deck[]);
+void deckRandomizer(string deck[]);
+void deckDistributor(string deck[]);
 void cardCount();
 void cardRearrange(string player);
-string removeSpace(string str);
+void cardCompare(int index);
+void stringToArray(vector <string> vector, string card);
 
 //GLOBAL VARIABLES
-//standard deck of cards
-string deck[52];
+//arrays to automate deck creation as well as help compare cards
+const string cardNumbers[13] = {"Two", "Three", "Four", "Five",
+  "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace"};
+//const string cardClasses[4] = {"♠️Spades♠️", "♥️Hearts♥️", "♦️Diamonds♦️", "♣️Clubs♣️",};
+const string cardClasses[4] = {"Spades", "Hearts", "Diamonds", "Clubs"};
 //vectors to act as player decks
 //vectors are a contiguous and dynamic/resizable structure for simulating a hand of cards
 vector <string> deckP1;
@@ -31,32 +37,36 @@ vector <string> discardP2;
 //MAIN
 int main()
 {
+  //standard deck of cards
+  string deck[52];
+  
   //clears the terminal
-  system("Clear");
+  cout << "\033[2J\033[0;0H";
 
   //function calls to init game
-  deckMaker();
-  deckRandomizer();
-  deckDistributor();
+  deckMaker(deck);
+  deckRandomizer(deck);
+  deckDistributor(deck);
 
   //function calls to begin game
   cardCount();
 
+  //function that allows the user to rearrange their cards
   cardRearrange("Player 1");
   cardRearrange("Player 2");
 
+  for(int i = 0; i < 4; i++)
+  {
+    cardCompare(i);   
+  }
+  
   return 0;
 }
 
 //FUNCTIONS
 //function to make a deck of 52 cards
-void deckMaker()
+void deckMaker(string deck[])
 {
-  //MOVE ACE TO TOP, ACE == 14
-  string cardNumbers[13] = {"Ace", "Two", "Three", "Four", "Five",
-  "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King"};
-  string cardClasses[4] = {"♥️Hearts♥️", "♦️Diamonds♦️", "♣️Clubs♣️", "♠️Spades♠️"};
-
   for(int i = 0; i<52; i++)
   {
     //repeating through cardNumbers
@@ -77,12 +87,12 @@ void deckMaker()
 }
 
 //function to randomize a deck of 52 cards
-void deckRandomizer()
+void deckRandomizer(string deck[])
 {
   //current time is passed as seed to srand() so seed is never repeated
   srand(time(0));
   //finding number of bytes in an array/number of bytes in data type
-  int len = sizeof(deck)/sizeof(string);
+  int len = 52;
   //randomizing deck[]
   for(int i = 0; i < len; i++)
   {
@@ -94,7 +104,7 @@ void deckRandomizer()
 }
 
 //function to distribute cards evenly between two players
-void deckDistributor()
+void deckDistributor(string deck[])
 {
   for (int i = 0; i < 52; i++)
   {
@@ -123,10 +133,13 @@ void cardCount()
   cout << endl;
 }
 
+//function to allow the player to rearrange their hand before playing
 void cardRearrange(string player)
 {
   cout << player << "'s Turn" << endl;
   cout << player << "'s Hand: \n";
+
+  //outputing the default starting hand
   for (int i = 0; i < 4; i++)
   {
     if (player == "Player 1")
@@ -139,53 +152,140 @@ void cardRearrange(string player)
     }
   }
   cout << endl;
+
+  //getting hand order input from user
   cout << player << ", please enter the order you would like to play your hand. Ex: 1 2 3 4"  << endl;
   cout << "Hand Order: ";
-  string handOrderInput;
-  getline(cin, handOrderInput);
-  string handOrder = removeSpace(handOrderInput);
-  cout << handOrder << endl;
+
+  int handOrder[4];
+  for(int i = 0; i < 4; i++)
+  {
+    cin >> handOrder[i];
+    handOrder[i]--;
+  }
+
+  //changing player hand to their order preference
   if (player == "Player 1")
   {
+    /*
+    creating a copy of the players hand to 
+    aid in rearranging.
+    This deck will be unchanged throughout 
+    the rearranging.
+    */
+    string handConst[4];
+    for(int i = 0; i < 4; i++)
+    {
+      handConst[i] = deckP1[i];
+    }
+    
     for (int i = 0; i < 4; i++)
     {
-      //subtracting 48 due to it being the ASCII value of 0
-      //subtracting 1 vectors use 0-based numbering
-      cout << deckP1.at((int)handOrder[i] - 48 - 1) << endl;
-      cout << deckP1.at(i) << endl;
-      string temp = deckP1.at((int)handOrder[i] - 48 - 1);
-      deckP1.at((int)handOrder[i]- 48 - 1) = deckP1.at(i);
-      deckP1.at(i) = temp;
+      deckP1[i] = handConst[handOrder[i]];
     }
-  }
-  // cout << player << "'s Hand: \n";
-  // for (int i = 0; i < 4; i++)
-  // {
-  //   if (player == "Player 1")
-  //   {
-  //     cout << (i+1) << ". " << deckP1.at(i) << endl;
-  //   }
-  //   else
-  //   {
-  //     cout << (i+1) << ". " << deckP2.at(i) << endl;
-  //   }
-  // }
-  // cout << endl;
-}
 
-//function to take a string and remove spaces
-string removeSpace(string str)
-{
-  //iterates through string not appending spaces
-  string noSpaces = "";
-  for (int i = 0; i < str.length(); i++)
-  {
-    if(str[i] != ' ')
+    //printing the rearranged deck
+    for(int i = 0; i < 4; i++)
     {
-      noSpaces += str[i];
+      cout << deckP1[i] << endl;    
+    }
+    //clearing the screen for the next player
+    //NOTE - Uncomment for submission
+    //cout << "\033[2J\033[0;0H";
+  }
+  
+  if (player == "Player 2")
+  {
+    /*
+    creating a copy of the players hand to 
+    aid in rearranging.
+    This deck will be unchanged throughout 
+    the rearranging.
+    */
+    string handConst[4];
+    for(int i = 0; i < 4; i++)
+    {
+      handConst[i] = deckP2[i];
+    }
+    
+    for (int i = 0; i < 4; i++)
+    {
+      deckP2[i] = handConst[handOrder[i]];
+    }
+
+    //printing the rearranged deck
+    for(int i = 0; i < 4; i++)
+    {
+      cout << deckP2[i] << endl;    
+    }
+    //clearing the screen for the next player
+    //NOTE - Uncomment for submission
+    //cout << "\033[2J\033[0;0H";
+  }
+}
+
+//function to take a index parameter and compare the players hands
+/*
+The cardCompare() function will get the split each card into an vector consisting of the number, as well as the class
+[number, class]
+
+The program will then search through the array cardNumbers looking for a match to the card number variable. The program repeats this process for Player 2's card. In the end, whichever index is higher is the card which will win the round.
+
+In the exception that the numbers are the same for both Player 1 and Player 2's card, the program will repeat the above process with the class variable as a tiebreaker.
+*/
+void cardCompare(int index)
+{
+  string cardP1 = deckP1[index];
+  string cardP2 = deckP2[index];
+  vector <string> cardVectorP1;
+  vector <string> cardVectorP2;
+
+  string word = "";
+  for(int i = 0; i < cardP1.length(); i++)
+  {
+    cout << cardP1[i] << endl;
+    if(cardP1[i] == ' ')
+    {
+      cardVectorP1.push_back(word);
+      word = "";
+    }
+    else
+    {
+      word = word + cardP1[i];
     }
   }
-  return noSpaces;
+
+  /*
+  for(int i = 0; i < cardVectorP1.size(); i++)
+    {
+      cout << cardVectorP1.at(i) << " ";
 }
 
 
+  cout << endl;
+  
+  cout << "- - Round" << index+1 << " - -" << endl;
+  
+  // taking the card at index from deckP1 and deckP2 and comparing them
+  cout << cardP1 << "  <-VS->  " << cardP2 << endl;
+}
+
+/*
+void stringToArray(vector <string> vector, string card)
+{
+  string word = "";
+  for(int i = 0; i < card.length(); i++)
+  {
+    if(card[i] == ' ')
+    {
+      vector.push_back(word);
+      cout << word << endl;
+      word = "";
+    }
+    else
+    {
+      word = word + card[i];
+    }
+  }
+}
+*/
