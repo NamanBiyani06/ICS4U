@@ -18,13 +18,12 @@ void deckDistributor(string deck[]);
 void cardCount();
 void cardRearrange(string player);
 void cardCompare(int index);
-void stringToArray(vector <string> vector, string card);
+vector <string> stringToVector(string str, vector <string> &vec);
 
 //GLOBAL VARIABLES
 //arrays to automate deck creation as well as help compare cards
 const string cardNumbers[13] = {"Two", "Three", "Four", "Five",
   "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace"};
-//const string cardClasses[4] = {"♠️Spades♠️", "♥️Hearts♥️", "♦️Diamonds♦️", "♣️Clubs♣️",};
 const string cardClasses[4] = {"Spades", "Hearts", "Diamonds", "Clubs"};
 //vectors to act as player decks
 //vectors are a contiguous and dynamic/resizable structure for simulating a hand of cards
@@ -184,11 +183,6 @@ void cardRearrange(string player)
       deckP1[i] = handConst[handOrder[i]];
     }
 
-    //printing the rearranged deck
-    for(int i = 0; i < 4; i++)
-    {
-      cout << deckP1[i] << endl;    
-    }
     //clearing the screen for the next player
     //NOTE - Uncomment for submission
     //cout << "\033[2J\033[0;0H";
@@ -213,11 +207,6 @@ void cardRearrange(string player)
       deckP2[i] = handConst[handOrder[i]];
     }
 
-    //printing the rearranged deck
-    for(int i = 0; i < 4; i++)
-    {
-      cout << deckP2[i] << endl;    
-    }
     //clearing the screen for the next player
     //NOTE - Uncomment for submission
     //cout << "\033[2J\033[0;0H";
@@ -227,7 +216,7 @@ void cardRearrange(string player)
 //function to take a index parameter and compare the players hands
 /*
 The cardCompare() function will get the split each card into an vector consisting of the number, as well as the class
-[number, class]
+[number, of, class]
 
 The program will then search through the array cardNumbers looking for a match to the card number variable. The program repeats this process for Player 2's card. In the end, whichever index is higher is the card which will win the round.
 
@@ -237,55 +226,36 @@ void cardCompare(int index)
 {
   string cardP1 = deckP1[index];
   string cardP2 = deckP2[index];
-  vector <string> cardVectorP1;
-  vector <string> cardVectorP2;
+  vector <string> cardVectorP1(3);
+  vector <string> cardVectorP2(3);
 
-  string word = "";
-  for(int i = 0; i < cardP1.length(); i++)
-  {
-    cout << cardP1[i] << endl;
-    if(cardP1[i] == ' ')
-    {
-      cardVectorP1.push_back(word);
-      word = "";
-    }
-    else
-    {
-      word = word + cardP1[i];
-    }
-  }
+  //puttings the cards to compare in a [number, of, class] vector
+  cardVectorP1 = stringToVector(cardP1, cardVectorP1);
+  cardVectorP2 = stringToVector(cardP2, cardVectorP2);
 
-  /*
-  for(int i = 0; i < cardVectorP1.size(); i++)
-    {
-      cout << cardVectorP1.at(i) << " ";
+  
 }
 
-
-  cout << endl;
-  
-  cout << "- - Round" << index+1 << " - -" << endl;
-  
-  // taking the card at index from deckP1 and deckP2 and comparing them
-  cout << cardP1 << "  <-VS->  " << cardP2 << endl;
-}
-
-/*
-void stringToArray(vector <string> vector, string card)
+vector <string> stringToVector(string str, vector <string> &vec)
 {
-  string word = "";
-  for(int i = 0; i < card.length(); i++)
+  vector <string> vector;
+  for(int i = 0; i < vec.size(); i++)
   {
-    if(card[i] == ' ')
+    vector.push_back(vec.at(i));
+  }
+
+  int vectorIndex = 0;
+  for(int i = 0; i < str.length(); i++)
+  {
+    if(str[i] != ' ')
     {
-      vector.push_back(word);
-      cout << word << endl;
-      word = "";
+      vector[vectorIndex].push_back(str[i]);
     }
     else
     {
-      word = word + card[i];
+      vectorIndex++;
     }
   }
+
+  return vector;
 }
-*/
