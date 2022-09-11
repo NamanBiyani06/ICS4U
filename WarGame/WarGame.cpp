@@ -9,6 +9,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <map>
 using namespace std;
 
 //FUNCTION DECLARATION
@@ -17,21 +18,34 @@ void deckRandomizer(string deck[]);
 void deckDistributor(string deck[]);
 void cardCount();
 void cardRearrange(string player);
+void mapMaker();
 void cardCompare(int index);
 vector <string> stringToVector(string str, vector <string> &vec);
+vector <int> cardHash(vector <string> & vec);
 
 //GLOBAL VARIABLES
-//arrays to automate deck creation as well as help compare cards
-const string cardNumbers[13] = {"Two", "Three", "Four", "Five",
-  "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace"};
-const string cardClasses[4] = {"Spades", "Hearts", "Diamonds", "Clubs"};
 //vectors to act as player decks
 //vectors are a contiguous and dynamic/resizable structure for simulating a hand of cards
 vector <string> deckP1;
 vector <string> deckP2;
+
 //vectors to act as each player's discard pile
 vector <string> discardP1;
 vector <string> discardP2;
+
+//arrays to automate deck creation as well as help compare cards
+const string cardNumbers[13] = {"Two", "Three", "Four", "Five", "Six", "Seven",
+"Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace"};
+const string cardClasses[4] = {"Spades", "Hearts", "Diamonds", "Clubs"};
+
+/*
+global hashmaps which will act as translation guides when converting strings to integers. 
+this will be used to make comparing two card values more efficient (maps are constant time). 
+the maps will be initialized in a helper function. 
+*/
+map <string, int> numberTranslator;
+map <string, int> classTranslator;
+
 
 //MAIN
 int main()
@@ -138,6 +152,7 @@ void cardRearrange(string player)
   cout << player << "'s Turn" << endl;
   cout << player << "'s Hand: \n";
 
+  //TODO - Make this function less lines by combining the two if statements
   //outputing the default starting hand
   for (int i = 0; i < 4; i++)
   {
@@ -191,10 +206,8 @@ void cardRearrange(string player)
   if (player == "Player 2")
   {
     /*
-    creating a copy of the players hand to 
-    aid in rearranging.
-    This deck will be unchanged throughout 
-    the rearranging.
+    creating a copy of the players hand to aid in rearranging.
+    This deck will be unchanged throughout the rearranging.
     */
     string handConst[4];
     for(int i = 0; i < 4; i++)
@@ -213,12 +226,27 @@ void cardRearrange(string player)
   }
 }
 
+//function to initialize maps to use for string to value translation
+void mapMaker()
+{
+  //{("Two", 2), ("Three", 3), ...}
+  for(int i = 0; i < 13; i++)
+  {
+    numberTranslator.insert(pair <string, int> (cardNumbers[i], (i + 2)));
+  }
+  //{("Spades", 1), ("Hearts", 2), ...}
+  for(int i = 0; i < 4; i++)
+  {
+    classTranslator.insert(pair <string, int> (cardClasses[i], (i + 1)));
+  }
+}
+
 //function to take a index parameter and compare the players hands
 /*
 The cardCompare() function will get the split each card into an vector consisting of the number, as well as the class
-[number, of, class]
+[number, class]
 
-The program will then search through the array cardNumbers looking for a match to the card number variable. The program repeats this process for Player 2's card. In the end, whichever index is higher is the card which will win the round.
+The function will then hash the vectors to make them possible to read as an integer. These integers will be compared, such that the player owning the higher integer will be awarded a point.
 
 In the exception that the numbers are the same for both Player 1 and Player 2's card, the program will repeat the above process with the class variable as a tiebreaker.
 */
@@ -229,13 +257,14 @@ void cardCompare(int index)
   vector <string> cardVectorP1(3);
   vector <string> cardVectorP2(3);
 
-  //puttings the cards to compare in a [number, of, class] vector
+  //puttings the cards to compare in a [number, class] vector
   cardVectorP1 = stringToVector(cardP1, cardVectorP1);
   cardVectorP2 = stringToVector(cardP2, cardVectorP2);
 
   
 }
 
+//function to split a string into a vector and return a vector
 vector <string> stringToVector(string str, vector <string> &vec)
 {
   vector <string> vector;
@@ -257,5 +286,19 @@ vector <string> stringToVector(string str, vector <string> &vec)
     }
   }
 
+  //popping the second element("of") out as it s not needed
+  int ofIndex = 1;
+  vector.erase(vector.begin() + 1);
   return vector;
+}
+
+//function to hash a vector
+vector <int> cardHash(vector <string> &vec)
+{
+  vector <string> vector;
+  for(int i = 0; i < vec.size(); i++)
+  {
+    vector.push_back(vec.at(i));
+  }
+  
 }
