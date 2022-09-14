@@ -10,9 +10,19 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include <sstream>
 using namespace std;
 
+//PLAYER CLASS
+class Player
+{
+  public:
+  int playerNumber;
+  string playerName;
+};
+
 //FUNCTION DECLARATION
+void playerInformation();
 void deckMaker(string deck[]);
 void deckRandomizer(string deck[]);
 void deckDistributor(string deck[]);
@@ -20,10 +30,12 @@ void cardCount();
 void cardRearrange(string player);
 void mapMaker();
 void cardCompare(int index);
-vector <string> stringToVector(string str, vector <string> &vec);
-vector <int> cardHash(vector <string> & vec);
+vector <int> cardReader(string str);
 
 //GLOBAL VARIABLES
+//player objects
+Player player1;
+Player player2;
 //vectors to act as player decks
 //vectors are a contiguous and dynamic/resizable structure for simulating a hand of cards
 vector <string> deckP1;
@@ -57,6 +69,8 @@ int main()
   cout << "\033[2J\033[0;0H";
 
   //function calls to init game
+  mapMaker();
+  playerInformation();
   deckMaker(deck);
   deckRandomizer(deck);
   deckDistributor(deck);
@@ -77,6 +91,19 @@ int main()
 }
 
 //FUNCTIONS
+//function to personalize player data
+void playerInformation()
+{
+  player1.playerNumber = 1;
+  player2.playerNumber = 2;
+  
+  cout << "Player 1, enter your username: ";
+  cin >> player1.playerName;
+
+  cout << "Player 2, enter your username: ";
+  cin >> player2.playerName;
+}
+
 //function to make a deck of 52 cards
 void deckMaker(string deck[])
 {
@@ -141,18 +168,21 @@ void cardCount()
   int deckSizeP1 = deckP1.size();
   int deckSizeP2 = deckP2.size();
 
-  cout << "Player 1: " << deckSizeP1 << " Cards" << endl;
-  cout << "Player 2: " << deckSizeP2 << " Cards" << endl;
+  cout << player1.playerName << ": " << deckSizeP1 << " Cards" << endl;
+  cout << player2.playerName << ": " << deckSizeP2 << " Cards" << endl;
   cout << endl;
 }
 
+//TODO - Make this function less lines by passing in deckP1 or deckP2 depending on the player you want to rearrange
 //function to allow the player to rearrange their hand before playing
 void cardRearrange(string player)
 {
-  cout << player << "'s Turn" << endl;
-  cout << player << "'s Hand: \n";
-
-  //TODO - Make this function less lines by combining the two if statements
+  if(player == "Player 1")
+  {
+    cout << player1.playerName << "'s Turn" << endl;
+    cout << player1.playerName << "'s Hand: \n";
+  }
+  
   //outputing the default starting hand
   for (int i = 0; i < 4; i++)
   {
@@ -168,8 +198,17 @@ void cardRearrange(string player)
   cout << endl;
 
   //getting hand order input from user
-  cout << player << ", please enter the order you would like to play your hand. Ex: 1 2 3 4"  << endl;
-  cout << "Hand Order: ";
+  if(player == "Player 1")
+  {
+    cout << player1.playerName << ", please enter the order you would like to play your hand. Ex: 1 2 3 4"  << endl;
+    cout << "Hand Order: ";
+  }
+  else
+  {
+    cout << player2.playerName << ", please enter the order you would like to play your hand. Ex: 1 2 3 4"  << endl;
+    cout << "Hand Order: ";
+  }
+  
 
   int handOrder[4];
   for(int i = 0; i < 4; i++)
@@ -199,8 +238,7 @@ void cardRearrange(string player)
     }
 
     //clearing the screen for the next player
-    //NOTE - Uncomment for submission
-    //cout << "\033[2J\033[0;0H";
+    cout << "\033[2J\033[0;0H";
   }
   
   if (player == "Player 2")
@@ -221,8 +259,7 @@ void cardRearrange(string player)
     }
 
     //clearing the screen for the next player
-    //NOTE - Uncomment for submission
-    //cout << "\033[2J\033[0;0H";
+    cout << "\033[2J\033[0;0H";
   }
 }
 
@@ -243,10 +280,10 @@ void mapMaker()
 
 //function to take a index parameter and compare the players hands
 /*
-The cardCompare() function will get the split each card into an vector consisting of the number, as well as the class
+The cardCompare() function will call the cardReader() function to turn each card into an vector consisting of the number, as well as the class
 [number, class]
 
-The function will then hash the vectors to make them possible to read as an integer. These integers will be compared, such that the player owning the higher integer will be awarded a point.
+The cardReader() will then hash the vectors to make them possible to read as an integer. These integers will be compared, such that the player owning the higher integer will be awarded a point.
 
 In the exception that the numbers are the same for both Player 1 and Player 2's card, the program will repeat the above process with the class variable as a tiebreaker.
 */
@@ -254,31 +291,54 @@ void cardCompare(int index)
 {
   string cardP1 = deckP1[index];
   string cardP2 = deckP2[index];
-  vector <string> cardVectorP1(3);
-  vector <string> cardVectorP2(3);
+  //vectors to store int[number, class]
+  vector <int> cardVectorP1(2);
+  vector <int> cardVectorP2(2);
 
   //puttings the cards to compare in a [number, class] vector
-  cardVectorP1 = stringToVector(cardP1, cardVectorP1);
-  cardVectorP2 = stringToVector(cardP2, cardVectorP2);
+  cardVectorP1 = cardReader(cardP1);
+  cardVectorP2 = cardReader(cardP2);
 
-  
+  //printing the cards being played
+  cout << "Round " << index + 1 << endl;
+  cout << player1.playerName << " played a " << cardP1 << "!" << endl;
+  cout << player2.playerName << " played a " << cardP2 << "!" << endl;
+
+  //comparing the card numbers
+  if(cardVectorP1.at(0) > cardVectorP2.at(0))
+  {
+    cout << player1.playerName << " has won the round!"<< endl;
+  }
+  else if(cardVectorP2.at(0) > cardVectorP1.at(0))
+  {
+    cout << player2.playerName << " has won the round!"<< endl;
+  }
+  else
+  {
+    if(cardVectorP1.at(1) > cardVectorP2.at(1))
+    {
+      cout << player1.playerName << " has won the round!"<< endl;
+    }
+    else if(cardVectorP2.at(1) > cardVectorP1.at(1))
+    {
+      cout << player2.playerName << " has won the round!"<< endl;
+    }
+  }
+  cout << endl;
 }
 
 //function to split a string into a vector and return a vector
-vector <string> stringToVector(string str, vector <string> &vec)
+vector <int> cardReader(string str)
 {
-  vector <string> vector;
-  for(int i = 0; i < vec.size(); i++)
-  {
-    vector.push_back(vec.at(i));
-  }
-
+  //reading the string into a string vector
+  vector <string> vectorStr(3);
+  
   int vectorIndex = 0;
   for(int i = 0; i < str.length(); i++)
   {
     if(str[i] != ' ')
     {
-      vector[vectorIndex].push_back(str[i]);
+      vectorStr[vectorIndex].push_back(str[i]);
     }
     else
     {
@@ -288,17 +348,14 @@ vector <string> stringToVector(string str, vector <string> &vec)
 
   //popping the second element("of") out as it s not needed
   int ofIndex = 1;
-  vector.erase(vector.begin() + 1);
-  return vector;
-}
+  vectorStr.erase(vectorStr.begin() + 1);
 
-//function to hash a vector
-vector <int> cardHash(vector <string> &vec)
-{
-  vector <string> vector;
-  for(int i = 0; i < vec.size(); i++)
-  {
-    vector.push_back(vec.at(i));
-  }
+  //hashing the string vector into an int vector
+  vector <int> vectorInt(2);
+  //converting the number into an int
+  vectorInt.at(0) = ((numberTranslator.at(vectorStr.at(0))));
+  //converting the class into an int
+  vectorInt.at(1) = ((classTranslator.at(vectorStr.at(1))));
   
+  return vectorInt;
 }
