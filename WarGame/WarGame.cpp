@@ -27,7 +27,7 @@ void deckMaker(string deck[]);
 void deckRandomizer(string deck[]);
 void deckDistributor(string deck[]);
 void cardCount();
-void cardRearrange(string player);
+void cardRearrange(Player player, vector <string> &deck);
 void mapMaker();
 void cardCompare(int index);
 vector <int> cardReader(string str);
@@ -58,6 +58,8 @@ the maps will be initialized in a helper function.
 map <string, int> numberTranslator;
 map <string, int> classTranslator;
 
+//global gameplay loop bool
+bool gameplayLoop = true;
 
 //MAIN
 int main()
@@ -79,13 +81,15 @@ int main()
   cardCount();
 
   //function that allows the user to rearrange their cards
-  cardRearrange("Player 1");
-  cardRearrange("Player 2");
+  cardRearrange(player1, deckP1);
+  cardRearrange(player2, deckP2);
 
   for(int i = 0; i < 4; i++)
   {
     cardCompare(i);   
   }
+
+  cardCount();
   
   return 0;
 }
@@ -165,49 +169,39 @@ void deckDistributor(string deck[])
 //function to count the cards in each player's hand
 void cardCount()
 {
-  int deckSizeP1 = deckP1.size();
-  int deckSizeP2 = deckP2.size();
+  int cardCountP1 = deckP1.size() + discardP1.size();
+  int cardCountP2 = deckP2.size() + discardP2.size();
 
-  cout << player1.playerName << ": " << deckSizeP1 << " Cards" << endl;
-  cout << player2.playerName << ": " << deckSizeP2 << " Cards" << endl;
+  cout << player1.playerName << ": " << cardCountP1 << " Cards" << endl;
+  cout << player2.playerName << ": " << cardCountP2 << " Cards" << endl;
+
+  //checking if a player has less cards than the four card threshold
+  if(cardCountP1 < 4)
+  {
+    //stop playing
+  }
+
+
   cout << endl;
 }
 
 //TODO - Make this function less lines by passing in deckP1 or deckP2 depending on the player you want to rearrange
 //function to allow the player to rearrange their hand before playing
-void cardRearrange(string player)
+void cardRearrange(Player player, vector <string> &deck)
 {
-  if(player == "Player 1")
-  {
-    cout << player1.playerName << "'s Turn" << endl;
-    cout << player1.playerName << "'s Hand: \n";
-  }
+  cout << player.playerName << "'s Turn" << endl;
+  cout << player.playerName << "'s Hand: \n";
   
   //outputing the default starting hand
   for (int i = 0; i < 4; i++)
   {
-    if (player == "Player 1")
-    {
-      cout << (i+1) << ". " << deckP1.at(i) << endl;
-    }
-    else
-    {
-      cout << (i+1) << ". " << deckP2.at(i) << endl;
-    }
+    cout << (i+1) << ". " << deck.at(i) << endl;
   }
   cout << endl;
 
   //getting hand order input from user
-  if(player == "Player 1")
-  {
-    cout << player1.playerName << ", please enter the order you would like to play your hand. Ex: 1 2 3 4"  << endl;
-    cout << "Hand Order: ";
-  }
-  else
-  {
-    cout << player2.playerName << ", please enter the order you would like to play your hand. Ex: 1 2 3 4"  << endl;
-    cout << "Hand Order: ";
-  }
+  cout << player.playerName << ", please enter the order you would like to play your hand. Ex: 1 2 3 4"  << endl;
+  cout << "Hand Order: ";
   
 
   int handOrder[4];
@@ -218,49 +212,25 @@ void cardRearrange(string player)
   }
 
   //changing player hand to their order preference
-  if (player == "Player 1")
+  /*
+  creating a copy of the players hand to 
+  aid in rearranging.
+  This deck will be unchanged throughout 
+  the rearranging.
+  */
+  string handConst[4];
+  for(int i = 0; i < 4; i++)
   {
-    /*
-    creating a copy of the players hand to 
-    aid in rearranging.
-    This deck will be unchanged throughout 
-    the rearranging.
-    */
-    string handConst[4];
-    for(int i = 0; i < 4; i++)
-    {
-      handConst[i] = deckP1[i];
-    }
-    
-    for (int i = 0; i < 4; i++)
-    {
-      deckP1[i] = handConst[handOrder[i]];
-    }
-
-    //clearing the screen for the next player
-    cout << "\033[2J\033[0;0H";
+    handConst[i] = deck[i];
   }
   
-  if (player == "Player 2")
+  for (int i = 0; i < 4; i++)
   {
-    /*
-    creating a copy of the players hand to aid in rearranging.
-    This deck will be unchanged throughout the rearranging.
-    */
-    string handConst[4];
-    for(int i = 0; i < 4; i++)
-    {
-      handConst[i] = deckP2[i];
-    }
-    
-    for (int i = 0; i < 4; i++)
-    {
-      deckP2[i] = handConst[handOrder[i]];
-    }
-
-    //clearing the screen for the next player
-    cout << "\033[2J\033[0;0H";
+    deck[i] = handConst[handOrder[i]];
   }
+
+  //clearing the screen for the next player
+  cout << "\033[2J\033[0;0H";
 }
 
 //function to initialize maps to use for string to value translation
@@ -289,8 +259,13 @@ In the exception that the numbers are the same for both Player 1 and Player 2's 
 */
 void cardCompare(int index)
 {
+  int roundWinner;
   string cardP1 = deckP1[index];
   string cardP2 = deckP2[index];
+  //removing the played cards from the player decks
+  deckP1.erase(deckP1.begin() + index);
+  deckP2.erase(deckP2.begin() + index);
+
   //vectors to store int[number, class]
   vector <int> cardVectorP1(2);
   vector <int> cardVectorP2(2);
@@ -308,21 +283,41 @@ void cardCompare(int index)
   if(cardVectorP1.at(0) > cardVectorP2.at(0))
   {
     cout << player1.playerName << " has won the round!"<< endl;
+    roundWinner = 1;
   }
   else if(cardVectorP2.at(0) > cardVectorP1.at(0))
   {
     cout << player2.playerName << " has won the round!"<< endl;
+    roundWinner = 2;
   }
   else
   {
     if(cardVectorP1.at(1) > cardVectorP2.at(1))
     {
       cout << player1.playerName << " has won the round!"<< endl;
+      roundWinner = 1;
     }
     else if(cardVectorP2.at(1) > cardVectorP1.at(1))
     {
       cout << player2.playerName << " has won the round!"<< endl;
+      roundWinner = 2;
     }
+  }
+
+  //adding the played cards to the winners discard pile
+  switch(roundWinner)
+  {
+    case 1:
+    discardP1.push_back(cardP1);
+    discardP1.push_back(cardP2);
+    cout << player1.playerName << " recieved 2 cards" << endl;
+    break;
+
+    case 2:
+    discardP2.push_back(cardP1);
+    discardP2.push_back(cardP2);
+    cout << player2.playerName << " recieved 2 cards" << endl;
+    break;
   }
   cout << endl;
 }
