@@ -1,5 +1,21 @@
-//NOTE - Deck rearrange does not work sometimes
-// Please fix 🙏
+//Note - C++ triggers an abort trap when the win condition is met.
+
+/*
+INSTRUCTIONS
+
+Welcome to War! War is a simple card game where player's each draw cards, with the value of the cards dictatinf the winner. Every turn, each player will draw four cards and choose the order to play them in. After the rearrangement process has been completed by both players, the cards will be played in the order you've chosen, and the winner of the round is dictated by the value of the cards.
+
+Card value is first determined by the number on the card, with Two being the lowest and Ace being the highest. In the case that the card numbers are the same, the game ranks the cards based on their class.
+
+The class system ranks classes as the following:
+1. Clubs
+2. Diamonds
+3. Hearts
+4. Spades
+
+Enjoy the Game!
+*/
+
 //ICS4U
 //War Game Assignment
 //Naman Biyani
@@ -10,11 +26,15 @@
 #include <time.h>
 #include <unistd.h>
 #include <vector>
+#include <cstring>
 #include <sstream>
 #include <string>
 #include <map>
 #include <sstream>
 #include <limits>
+#include <chrono>
+#include <thread>
+
 using namespace std;
 
 //PLAYER CLASS
@@ -26,17 +46,18 @@ class Player
 };
 
 //FUNCTION DECLARATION
+void instructions();
 void playerInformation();
 void deckMaker(string deck[]);
 void deckRandomizer(string deck[]);
 void deckDistributor(string deck[]);
-void cardCount();
+string cardCount();
 void cardRearrange(Player player, vector <string> &deck);
 void pressEnterToContinue();
 void mapMaker();
 void cardCompare(int index);
 vector <int> cardReader(string str);
-void discardInsert(vector <string> &playerDeck, vector <string> &playerDiscard);
+void discardInsert(vector <string> &playerDeck, vector <string> &playerDiscard, Player player);
 void eraseFromDeck(int n);
 
 //GLOBAL VARIABLES
@@ -56,6 +77,9 @@ vector <string> discardP2;
 const string cardNumbers[13] = {"Two", "Three", "Four", "Five", "Six", "Seven",
 "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace"};
 const string cardClasses[4] = {"Spades", "Hearts", "Diamonds", "Clubs"};
+
+//array to make for loop
+const char letters[4] = {'a', 'b', 'c', 'd'};
 
 /*
 global hashmaps which will act as translation guides when converting strings to integers. 
@@ -81,10 +105,9 @@ int main()
   cout << "\033[2J\033[0;0H";
 
   //function calls to init game
+  instructions();
   mapMaker();
   playerInformation();
-  //How are these function calls working??
-  //theres no pointers and deck is not global?
   deckMaker(deck);
   deckRandomizer(deck);
   deckDistributor(deck);
@@ -92,37 +115,65 @@ int main()
   //function calls to begin game
   cardCount();
 
-//two eight king queen
-//seven six two king
   while(gameplayLoop)
   {
     //function that allows the user to rearrange their cards
     cardRearrange(player1, deckP1);    
     cardRearrange(player2, deckP2);
 
-
-    for (int i = 0; i < 4; i++)
-    {
-      cout << deckP1.at(i) << " vs " << deckP2.at(i) << endl;
-    }
-    
-    cout << "\n\n\n";
     for(int i = 0; i < 4; i++)
     {
-      cout << deckP1.at(i) << " vs " << deckP2.at(i) << endl;
       cardCompare(i);
     }
     eraseFromDeck(4);
 
-    cardCount();
+    discardInsert(deckP1, discardP1, player1);
+    discardInsert(deckP2, discardP2, player2);
+
+    string game = cardCount();
+    //in most cases, goto statements are messy but using goto to break out of multiple loops is a strong usage
+    if(game == "GameOver") goto GameOver;
+
     pressEnterToContinue();
-    discardInsert(deckP1, discardP1);
-    discardInsert(deckP2, discardP2);
   }
 
-  return 0;
+  GameOver: return 0;
 }
 
+void instructions()
+{
+  string instructions1 = "--INSTRUCTIONS--\n\n";
+  string instructions2 = "Welcome to War! War is a simple card game where player's each draw cards, with the value of the cards dictatinf the winner. Every turn, each player will draw four cards and choose the order to play them in. After the rearrangement process has been completed by both players, the cards will be played in the order you've chosen, and the winner of the round is dictated by the value of the cards.\n\n";
+  string instructions3 = "Card value is first determined by the number on the card, with Two being the lowest and Ace being the highest. In the case that the card numbers are the same, the game ranks the cards based on their class.\n\n";
+  string instructions4 = "The class system ranks classes as the following:\n1. Clubs\n2. Diamonds\n3. Hearts\n4. Spades\n\nEnjoy the Game!";
+
+  cout << instructions1;
+
+
+
+  for (int i = 0; i < instructions2.size(); i++)
+  {cout << instructions2[i];
+  //usleep(5000);
+  //std::this_thread::sleep_for(std::chrono::milliseconds(30));
+  }
+
+  for (int i = 0; i < instructions3.size(); i++)
+  {cout << instructions3[i];
+  //usleep(50000);
+  //std::this_thread::sleep_for(std::chrono::milliseconds(30));
+  }
+
+  for (int i = 0; i < instructions3.size(); i++)
+  {cout << instructions4[i];
+  //usleep(50000);
+  // std::this_thread::sleep_for(std::chrono::milliseconds(30));
+  }
+  cout << endl;
+
+  cout << "Press Enter to Continue\n";
+  cin.ignore();
+  cout << "\033[2J\033[0;0H";
+}
 //FUNCTIONS
 //function to personalize player data
 void playerInformation()
@@ -193,7 +244,7 @@ void deckDistributor(string deck[])
 }
 
 //function to count the cards in each player's hand
-void cardCount()
+string cardCount()
 {
   int cardCountP1 = deckP1.size() + discardP1.size();
   int cardCountP2 = deckP2.size() + discardP2.size();
@@ -210,18 +261,24 @@ void cardCount()
   if(cardCountP1 < 4)
   {
     gameplayLoop = false;
+    cout << endl;
     cout << player1.playerName << " has ran out of cards!\n\n";
     cout << player2.playerName << " won the game!";
+    return "GameOver";
   }
   else if(cardCountP2 < 4)
   {
     gameplayLoop = false;
+    cout << endl;
     cout << player2.playerName << " has ran out of cards!\n\n";
     cout << player1.playerName << " won the game!";
+    return "GameOver";
   }
 
 
+
   cout << endl;
+  return "ContinueGame";
 }
 
 //prompting the user to press enter to continue the game
@@ -243,20 +300,23 @@ void cardRearrange(Player player, vector <string> &deck)
   //outputing the default starting hand
   for (int i = 0; i < 4; i++)
   {
-    cout << (i+1) << ". " << deck.at(i) << endl;
+    cout << letters[i] << ". " << deck.at(i) << endl;
   }
   cout << endl;
 
   //getting hand order input from user
-  cout << "Enter the hand order\nEx: 1 2 3 4"  << endl;
+  cout << "Enter the hand order\nFor Example \"a b c d\""  << endl;
   cout << "Hand Order: ";
   
-
+  char handOrderChar[4];
   int handOrder[4];
   for(int i = 0; i < 4; i++)
   {
-    cin >> handOrder[i];
-    handOrder[i]--;
+    cin >> handOrderChar[i];
+    if(handOrderChar[i] == 'a') handOrder[i] = 0;
+    else if(handOrderChar[i] == 'b') handOrder[i] = 1;
+    else if(handOrderChar[i] == 'c') handOrder[i] = 2;
+    else if(handOrderChar[i] == 'd') handOrder[i] = 3;
   }
 
   //changing player hand to their order preference
@@ -322,15 +382,13 @@ void cardCompare(int index)
   cout << player2.playerName << " played a " << cardP2 << "!" << endl;
 
   //loading animation to build suspense
-  sleep(1);
-  cout << "." << flush;
-  sleep(1);
-  cout << "." << flush;
-  sleep(1);
-  cout << "." << flush;
-  sleep(1);
+  for (int i = 0; i < 3; i++)
+  {
+    usleep(500000);
+    cout << "." << flush;
+  }
+  usleep(500000);
   cout << "\b\b\b" << flush;
-  
   
   //comparing the card numbers
   if(cardVectorP1.at(0) > cardVectorP2.at(0))
@@ -363,13 +421,13 @@ void cardCompare(int index)
     case 1:
     discardP1.push_back(cardP1);
     discardP1.push_back(cardP2);
-    cout << player1.playerName << " recieved 2 cards" << endl;
+    //cout << player1.playerName << " recieved 2 cards" << endl;
     break;
 
     case 2:
     discardP2.push_back(cardP1);
     discardP2.push_back(cardP2);
-    cout << player2.playerName << " recieved 2 cards" << endl;
+    //cout << player2.playerName << " recieved 2 cards" << endl;
     break;
   }
   cout << endl;
@@ -409,10 +467,11 @@ vector <int> cardReader(string str)
 }
 
 //function to randomize the players discard pile and insert it into the players main deck if their main deck < 4
-void discardInsert(vector <string> &playerDeck, vector <string> &playerDiscard)
+void discardInsert(vector <string> &playerDeck, vector <string> &playerDiscard, Player player)
 {
   if(playerDeck.size() < 4)
   {
+    cout << player.playerName << "\'s discard pile has been reshuffled and redistributed!" << endl;
     int len = playerDiscard.size();
     //randomizing the discard deck
     for(int i = 0; i < len; i++)
@@ -428,16 +487,14 @@ void discardInsert(vector <string> &playerDeck, vector <string> &playerDiscard)
     {
       playerDeck.push_back(playerDiscard.at(i));
     }
+
+    playerDiscard.clear();
   }
 }
 
+//function to remove the played cards from the users deck
 void eraseFromDeck(int n)
 {
-  for (int i = 0; i < n; i++)
-  {
-    //removing the played cards from the player decks
-    deckP1.erase(deckP1.begin() + n);
-    deckP2.erase(deckP2.begin() + n);
-  }
-  
+  deckP1.erase(next(deckP1.begin(), 0), next(deckP1.begin(), 4));
+  deckP2.erase(next(deckP2.begin(), 0), next(deckP2.begin(), 4));
 }
