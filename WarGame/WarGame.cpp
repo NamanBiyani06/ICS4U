@@ -1,4 +1,7 @@
-//Note - C++ triggers an abort trap when the win condition is met.
+//ICS4U
+//War Game Assignment
+//Naman Biyani
+//July 26, 2022
 
 /*
 INSTRUCTIONS
@@ -16,10 +19,7 @@ The class system ranks classes as the following:
 Enjoy the Game!
 */
 
-//ICS4U
-//War Game Assignment
-//Naman Biyani
-//July 26, 2022
+
 
 #include <iostream>
 #include <cstdlib>
@@ -59,6 +59,7 @@ void cardCompare(int index);
 vector <int> cardReader(string str);
 void discardInsert(vector <string> &playerDeck, vector <string> &playerDiscard, Player player);
 void eraseFromDeck(int n);
+void clear();
 
 //GLOBAL VARIABLES
 //player objects
@@ -102,7 +103,7 @@ int main()
   string deck[52];
   
   //clears the terminal
-  cout << "\033[2J\033[0;0H";
+  clear();
 
   //function calls to init game
   instructions();
@@ -172,7 +173,7 @@ void instructions()
 
   cout << "Press Enter to Continue\n";
   cin.ignore();
-  cout << "\033[2J\033[0;0H";
+  clear();
 }
 //FUNCTIONS
 //function to personalize player data
@@ -287,7 +288,7 @@ void pressEnterToContinue()
   cout << "Press Enter to Continue\n";
   cin.ignore();
   cin.ignore();
-  cout << "\033[2J\033[0;0H";
+  clear();
 }
 
 //TODO - Make this function less lines by passing in deckP1 or deckP2 depending on the player you want to rearrange
@@ -313,6 +314,7 @@ void cardRearrange(Player player, vector <string> &deck)
   for(int i = 0; i < 4; i++)
   {
     cin >> handOrderChar[i];
+
     if(handOrderChar[i] == 'a') handOrder[i] = 0;
     else if(handOrderChar[i] == 'b') handOrder[i] = 1;
     else if(handOrderChar[i] == 'c') handOrder[i] = 2;
@@ -335,7 +337,7 @@ void cardRearrange(Player player, vector <string> &deck)
   }
   
   //clearing the screen for the next player
-  cout << "\033[2J\033[0;0H";
+  clear();
 }
 
 //function to initialize maps to use for string to value translation
@@ -498,3 +500,5 @@ void eraseFromDeck(int n)
   deckP1.erase(next(deckP1.begin(), 0), next(deckP1.begin(), 4));
   deckP2.erase(next(deckP2.begin(), 0), next(deckP2.begin(), 4));
 }
+
+void clear() {cout << "\033[2J\033[0;0H";}
